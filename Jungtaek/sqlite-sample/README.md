@@ -15,6 +15,7 @@ gcc sample.c -o sample.o -l sqlite3
 ```
 * Database Schema<br/>
 SENTENCE<br/>
+
 |  KEY | FIELD   | TYPE      |
 | ---- | ------- | --------- |
 |  PK  | ID      | INT       |
