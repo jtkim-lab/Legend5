@@ -17,13 +17,59 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <wiringPi.h>
 #include <wiringSerial.h>
 
+//JT
+#include <sqlite3.h>
+
 #include "lcd_22.h"
 
 #define NUMOFBLKS 32
+
+//JT
+char dbID[100];
+char dbTime[100];
+char dbIDArray[100];
+char dbCorrect[100];
+
+//JT
+static int callback(void *NotUsed, int argc, char **argv, char **azColName)
+{
+	int i;
+
+	for(i = 0; i < argc; i++)
+	{   
+		printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+
+		if(!strcmp(azcolname[i], "ID"))
+		{
+			strcpy(dbID, argv[i]);
+		}
+
+		if(!strcmp(azcolname[i], "TIME"))
+		{
+			strcpy(dbTime, argv[i]);
+		}
+
+		if(!strcmp(azcolname[i], "CORRECT"))
+		{
+			strcpy(dbCorrect, argv[i]);
+		}
+
+		if(!strcmp(azcolname[i], "IDARRAY"))
+		{
+			strcpy(dbIDArray, argv[i]);
+		}
+	}   
+
+	printf("\n");
+
+	return 0;
+}
+
 
 /*
 char WordTable[MAX_BLOCKS][10]={
@@ -97,6 +143,20 @@ int main (char argc, char * argv[])
 	int loop_cnt = 0 ;
 	int pairing_flag = 0;
 	int double_check_flag = 0;
+
+	//JT
+	sqlite3 *db;
+	int ret;
+	char* sql;
+	char* err = 0;
+	const char* data = "Callback function is called";
+	
+	ret = sqlite3_open("Legend5.db", &db);
+
+	if(ret)
+	{
+		return 1;
+	}
 
 	if(!bcm2835_init()) return 1 ;
 
@@ -228,6 +288,24 @@ int main (char argc, char * argv[])
 				result=sentence_processing(ID_arrayc, count, 0);
 			}
 			printf("----------check grammar end----------\n") ;
+
+			//JT
+			sql = "INSERT INTO SENTENCE (CORRECT, IDARRAY) VALUES (";
+			if (result == 0)
+				strcat(sql, "0, '");
+			else
+				strcat(sql, "1, '");
+
+			strcat(sql, ID_arrayc);
+			strcat(sql, "');");
+
+			ret = sqlite3_exec(db, sql, callback, 0, &err);
+
+			if(ret != SQLITE_OK)
+			{
+				printf("JT: %s\n", err);
+				return 1;
+			}
 		}
 
 
@@ -266,7 +344,16 @@ int main (char argc, char * argv[])
 
 			//IF START BYTE IS ARRIVED, SEND DATA
 			
-			/*------------------------------JT please edit this part below-----------------------------------------*/
+			//JT
+			sql = "SELECT * from COMPANY";
+
+			ret = sqlite3_exec(db, sql, callback, (void*) data, &err);
+
+			if(ret != SQLITE_OK)
+			{
+				printf("JT: %s\n", err);
+				return 1;
+			}
 
 			// (0) Total Count
 			printf("total count:%d is sent\n",count);
