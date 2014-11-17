@@ -20,6 +20,6 @@ SENTENCE<br/>
 | ---- | ------- | --------- |
 |  PK  | ID      | INT       |
 |      | TIME    | TIMESTAMP |
+|      | CORRECT | BOOL      |
 |      | IDARRAY | CHAR(100) |
-|      | ETC     | TEXT      |
 
